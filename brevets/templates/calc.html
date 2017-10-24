@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<html> <head>
+<html>
+<head>
 <title>ACP Controle Times</title>
 
   <!-- 'viewport' is used by bootstrap to respond to device size -->
@@ -19,7 +20,7 @@
 
   <!-- moment.js is the JavaScript equivalent of arrow.py -->
   <script 
-    src="{{ url_for('static', filename="js/moment.min.js") }}"></script>
+    src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 
 </head>
 
@@ -117,24 +118,39 @@
   var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
   var TIME_CALC_URL = SCRIPT_ROOT + "/_calc_times";
 
-  // Pass calctimes a <td> element containing the data for a control.
-  // It extracts the distance and calls the server to get times to
-  // fill in open and close times in a human-readable format.
-  // (If we want to also keep the ISO-formatted times, we'll need to
-  // stash them in hidden fields.) 
   function calc_times(control) {
     var km = control.find("input[name='km']").val();
     var open_time_field = control.find("input[name='open']");
     var close_time_field = control.find("input[name='close']");
+    var start_date = $("#begin_date").val();
+    console.log("Start date = " + start_date);
+    var brevet_dist = $("#brevet_dist_km").val();
+    var start_time = $("#begin_time").val();
+    console.log("start time = " + start_time);
+    var start = moment(start_date + ' ' + start_time).format('YYYY-MM-DD HH:mm');
+    console.log("actual start that gets sent " + start);
     
-    $.getJSON(TIME_CALC_URL, { km: km }, 
+    $.getJSON("/_calc_times", { km: km, brevet_dist: brevet_dist, start: start },
       // response handler
       function(data) {
          var times = data.result;
          console.log("Got a response: " +  times);
          console.log("Response.open = " + times.open);
-         open_time_field.val( moment(times.open).format("ddd M/D H:mm"));
-         close_time_field.val( moment(times.close).format("ddd M/D H:mm"));
+         //console.log(“raw open ISO time was” + times.open);
+         var open_moment = moment( times.open );
+         console.log("Moment turned the open date into" + open_moment);
+         console.log("Which is an ISO open date" + open_moment.toISOString());
+         var open_formatted = open_moment.utc().format("ddd M/D H:mm");
+         console.log("Formatted it as" + open_formatted);
+         open_time_field.val(open_formatted);
+         //console.log(“raw close ISO time was” + times.close);
+         var close_moment = moment( times.close );
+         console.log("Moment turned the close date into" + close_moment);
+         console.log("Which is an ISO close date" + close_moment.toISOString());
+         var close_formatted = close_moment.utc().format("ddd M/D H:mm");
+         console.log("Formatted it as" + close_formatted);
+         close_time_field.val(close_formatted);
+
        } // end of handler function
      );// End of getJSON
     }
